@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EmployeeHub – Employee Management System</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#1b2133;--muted:#6b7490;--line:#e4e8f2;--brand:#2563eb;--brand-d:#1d4ed8;--green:#059669;--red:#dc2626;--soft:#eef2ff;--shadow:0 2px 10px rgba(20,30,60,.07)}
+[data-theme=dark]{--bg:#0f1424;--card:#171d33;--text:#e8ecf8;--muted:#98a2c3;--line:#262e4a;--soft:#1e2646;--shadow:none}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1100px;margin:0 auto;padding:0 18px}
+header{background:var(--card);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:14px;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px}
+.logo i{font-style:normal;background:var(--brand);color:#fff;width:38px;height:38px;border-radius:10px;display:grid;place-items:center}
+.logo small{display:block;font-size:10px;letter-spacing:.12em;color:var(--muted);font-weight:600}
+.grow{flex:1}
+.status{font-size:13px;padding:6px 12px;border-radius:99px;font-weight:600}
+.status.ok{background:#d1fae5;color:#047857}
+.status.bad{background:#fee2e2;color:#b91c1c}
+.btn{border:1px solid var(--line);background:var(--card);padding:9px 16px;border-radius:9px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-d)}
+.btn.small{padding:5px 10px;font-size:13px}
+.btn.danger{color:var(--red)}
+.hero{margin:22px 0;padding:28px;border-radius:16px;background:linear-gradient(120deg,var(--soft),var(--card));border:1px solid var(--line)}
+.hero h1{margin:0 0 6px;font-size:26px}
+.hero p{margin:0;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.stat span{font-size:13px;color:var(--muted)}
+.stat b{display:block;font-size:22px;margin-top:6px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:30px}
+.tools{display:flex;gap:10px;padding:14px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tools input,.tools select,.field input,.field select{padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);width:100%}
+.tools input{flex:1;min-width:200px;width:auto}
+.tools select{width:auto}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td small{display:block;color:var(--muted)}
+td.num,th.num{text-align:right}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.actions{display:flex;gap:6px;justify-content:flex-end}
+.overlay{position:fixed;inset:0;background:rgba(10,15,30,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.overlay.open{display:flex}
+.modal{background:var(--card);border-radius:16px;width:100%;max-width:520px;max-height:92vh;overflow:auto;padding:22px}
+.modal h2{margin:0 0 14px;font-size:20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.field.full{grid-column:1/-1}
+.err{color:var(--red);font-size:14px;min-height:20px;margin-top:10px}
+.foot{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+.slip dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:8px 16px}
+.slip dt{color:var(--muted)}
+.slip dd{margin:0;text-align:right;font-weight:600}
+.slip .total{border-top:2px dashed var(--line);padding-top:10px;font-size:18px;color:var(--brand)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);background:#111827;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:20}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast.bad{background:#b91c1c}
+@media(max-width:800px){.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.hero h1{font-size:21px}}
+@media print{body>*:not(#slipModal){display:none!important}#slipModal{position:static;background:none;display:block!important;padding:0}.modal{max-width:none;box-shadow:none}.no-print{display:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div class="logo"><i>E</i><div>Employee<span style="color:var(--brand)">Hub</span><small>MANAGEMENT SYSTEM</small></div></div>
+    <div class="grow"></div>
+    <span id="status" class="status bad">Connecting…</span>
+    <button class="btn" id="themeBtn" title="Toggle dark mode">🌙</button>
+    <button class="btn primary" onclick="openForm()">+ Add Employee</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Manage Employees &amp; Salaries Seamlessly</h1>
+    <p>Add, search, update and remove employees, and generate salary slips. Powered by a Java backend.</p>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><span>Total Employees</span><b id="s-count">0</b></div>
+    <div class="stat"><span>Monthly Net Payroll</span><b id="s-payroll">₹0.00</b></div>
+    <div class="stat"><span>Departments</span><b id="s-depts">0</b></div>
+    <div class="stat"><span>Average Net Salary</span><b id="s-avg">₹0.00</b></div>
+  </section>
+
+  <section class="panel">
+    <div class="tools">
+      <input id="search" placeholder="Search by name, ID, department, designation or email">
+      <select id="deptFilter"><option value="">All departments</option></select>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>ID</th><th>Employee</th><th>Department</th><th>Designation</th><th>Joined</th><th class="num">Basic</th><th class="num">Net Salary</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- Add / Edit employee -->
+<div class="overlay" id="formModal">
+  <form class="modal" id="form" novalidate>
+    <h2 id="formTitle">Add Employee</h2>
+    <input type="hidden" id="f-id">
+    <div class="grid">
+      <div class="field full"><label>Full name *</label><input name="name" placeholder="e.g. Ravi Kumar"></div>
+      <div class="field"><label>Email</label><input name="email" placeholder="name@domain.com"></div>
+      <div class="field"><label>Phone</label><input name="phone" placeholder="9876543210"></div>
+      <div class="field"><label>Department *</label><input name="department" placeholder="e.g. IT" list="deptList"><datalist id="deptList"></datalist></div>
+      <div class="field"><label>Designation *</label><input name="designation" placeholder="e.g. Software Engineer"></div>
+      <div class="field"><label>Join date</label><input name="joinDate" type="date"></div>
+      <div class="field"><label>Basic salary (₹) *</label><input name="basic" type="number" min="0" step="0.01" placeholder="50000"></div>
+    </div>
+    <div class="err" id="formError"></div>
+    <div class="foot">
+      <button type="button" class="btn" onclick="closeModals()">Cancel</button>
+      <button type="submit" class="btn primary">Save</button>
+    </div>
+  </form>
+</div>
+
+<!-- Salary slip -->
+<div class="overlay" id="slipModal">
+  <div class="modal slip">
+    <h2>Salary Slip</h2>
+    <dl id="slipBody"></dl>
+    <div class="foot no-print" style="margin-top:18px">
+      <button class="btn" onclick="closeModals()">Close</button>
+      <button class="btn primary" onclick="window.print()">Print</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => '₹' + Number(n).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+let employees = [];
+
+function setStatus(ok) {
+  const el = $('#status');
+  el.className = 'status ' + (ok ? 'ok' : 'bad');
+  el.textContent = ok ? 'Java Backend: Connected (' + (location.port || 80) + ')' : 'Java Backend: Disconnected';
+}
+
+function toast(msg, bad) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (bad ? ' bad' : '');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.className = 'toast', 2600);
+}
+
+async function load() {
+  try {
+    const r = await fetch('/api/employees');
+    employees = await r.json();
+    setStatus(true);
+  } catch (e) {
+    employees = [];
+    setStatus(false);
+  }
+  render();
+}
+
+function render() {
+  const total = employees.reduce((s, e) => s + e.net, 0);
+  const depts = [...new Set(employees.map(e => e.department))].sort();
+  $('#s-count').textContent = employees.length;
+  $('#s-payroll').textContent = money(total);
+  $('#s-depts').textContent = depts.length;
+  $('#s-avg').textContent = money(employees.length ? total / employees.length : 0);
+  $('#deptList').innerHTML = depts.map(d => `<option value="${esc(d)}">`).join('');
+
+  const sel = $('#deptFilter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All departments</option>' + depts.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+  sel.value = depts.includes(current) ? current : '';
+
+  const q = $('#search').value.trim().toLowerCase();
+  const rows = employees.filter(e =>
+    (!sel.value || e.department === sel.value) &&
+    (!q || [String(e.id), e.name, e.department, e.designation, e.email].some(v => v.toLowerCase().includes(q))));
+
+  $('#rows').innerHTML = rows.length ? rows.map(e => `
+    <tr>
+      <td>${e.id}</td>
+      <td><b>${esc(e.name)}</b><small>${esc(e.email || e.phone || '')}</small></td>
+      <td>${esc(e.department)}</td>
+      <td>${esc(e.designation)}</td>
+      <td>${esc(e.joinDate)}</td>
+      <td class="num">${money(e.basic)}</td>
+      <td class="num"><b>${money(e.net)}</b></td>
+      <td><div class="actions">
+        <button class="btn small" onclick="openSlip(${e.id})">Slip</button>
+        <button class="btn small" onclick="openForm(${e.id})">Edit</button>
+        <button class="btn small danger" onclick="removeEmp(${e.id})">Delete</button>
+      </div></td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">No employees found.</td></tr>';
+}
+
+function openModal(id) { $(id).classList.add('open'); }
+function closeModals() { document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open')); }
+
+function openForm(id) {
+  const f = $('#form');
+  f.reset();
+  $('#formError').textContent = '';
+  const e = employees.find(x => x.id === id);
+  $('#f-id').value = e ? e.id : '';
+  $('#formTitle').textContent = e ? 'Edit Employee #' + e.id : 'Add Employee';
+  if (e) {
+    for (const k of ['name', 'email', 'phone', 'department', 'designation', 'joinDate', 'basic']) f.elements[k].value = e[k];
+  } else {
+    f.elements.joinDate.value = new Date().toISOString().slice(0, 10);
+  }
+  openModal('#formModal');
+}
+
+$('#form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const id = $('#f-id').value;
+  try {
+    const r = await fetch(id ? '/api/employees/' + id : '/api/employees', {
+      method: id ? 'PUT' : 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams(new FormData(ev.target))
+    });
+    const data = await r.json();
+    if (!r.ok) { $('#formError').textContent = data.error || 'Something went wrong.'; return; }
+    closeModals();
+    toast(id ? 'Employee updated.' : 'Employee added (ID ' + data.id + ').');
+    load();
+  } catch (e) {
+    $('#formError').textContent = 'Cannot reach the Java server. Is it running?';
+  }
+});
+
+async function removeEmp(id) {
+  const e = employees.find(x => x.id === id);
+  if (!e || !confirm('Delete ' + e.name + ' (ID ' + id + ')?')) return;
+  try {
+    const r = await fetch('/api/employees/' + id, {method: 'DELETE'});
+    if (!r.ok) { toast('Could not delete.', true); return; }
+    toast('Employee deleted.');
+    load();
+  } catch (err) {
+    toast('Cannot reach the Java server.', true);
+  }
+}
+
+function openSlip(id) {
+  const e = employees.find(x => x.id === id);
+  if (!e) return;
+  $('#slipBody').innerHTML = `
+    <dt>Employee ID</dt><dd>${e.id}</dd>
+    <dt>Name</dt><dd>${esc(e.name)}</dd>
+    <dt>Department</dt><dd>${esc(e.department)}</dd>
+    <dt>Designation</dt><dd>${esc(e.designation)}</dd>
+    <dt>Basic Salary</dt><dd>${money(e.basic)}</dd>
+    <dt>HRA (20%)</dt><dd>+ ${money(e.hra)}</dd>
+    <dt>PF (12%)</dt><dd>− ${money(e.pf)}</dd>
+    <dt class="total">Net Salary</dt><dd class="total">${money(e.net)}</dd>`;
+  openModal('#slipModal');
+}
+
+$('#search').addEventListener('input', render);
+$('#deptFilter').addEventListener('change', render);
+$('#themeBtn').addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme !== 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : '';
+  $('#themeBtn').textContent = dark ? '☀️' : '🌙';
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('mousedown', e => { if (e.target === o) closeModals(); }));
+
+load();
+</script>
+</body>
+</html>
